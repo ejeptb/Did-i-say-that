@@ -52,3 +52,4 @@ function analyze() {
     <p><strong>Rewrite (your vibe):</strong> ${rewrite}</p>
   `;
 }
+if(personality === "rough") rewrite = "Yo, don’t sugarcoat—say what you mean.";
