@@ -1,4 +1,4 @@
-function analyze() {
+async function analyze() {
   const text = document.getElementById("text").value;
   const personality = document.getElementById("personality").value;
   const resultDiv = document.getElementById("result");
@@ -10,70 +10,44 @@ function analyze() {
 
   resultDiv.innerHTML = "<p>Processing… ⏳</p>";
 
-  // ---- Simple keyword-based tone detection ----
-  let soundsLike = [];
-  let warning = "";
+  try {
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, personality })
+    });
 
-  const lower = text.toLowerCase();
+    const data = await res.json();
 
-  if (lower.includes("i guess") || lower.includes("whatever")) soundsLike.push("passive-aggressive");
-  if (lower.includes("sorry") && text.length > 40) {
-    soundsLike.push("over-apologizing");
-    warning = "🚩 You might be shrinking yourself here.";
+    if (data.error) {
+      resultDiv.innerHTML = `<p class='warning'>Error: ${data.error}</p>`;
+      return;
+    }
+
+    // Add emoji flair
+    const endings = ["😅", "🤔", "💀", "🔥", "🙃", "😳", "💖", "😎"];
+    let resultText = data.result + " " + endings[Math.floor(Math.random() * endings.length)];
+
+    // Wrap result in card with copy button
+    resultDiv.innerHTML = `
+      <button class="copy-btn" onclick="copyResult()">Copy</button>
+      <p>${resultText}</p>
+    `;
+
+    // store latest result for copy function
+    resultDiv.dataset.latest = resultText;
+
+  } catch (err) {
+    resultDiv.innerHTML = "<p class='warning'>Error: Could not reach AI.</p>";
+    console.error(err);
   }
-  if (lower.includes("love you") || lower.includes("luv u")) soundsLike.push("affectionate");
-  if (lower.includes("ugh") || lower.includes("smh")) soundsLike.push("frustrated");
-  if (lower.includes("hey") && text.length < 20) soundsLike.push("casual");
-  if (lower.includes("idk") || lower.includes("not sure")) soundsLike.push("uncertain");
-  if (lower.includes("you never") || lower.includes("you always")) {
-    soundsLike.push("accusatory");
-    warning = "⚠️ This could put them on defense.";
-  }
+}
 
-  let coreIntent = "You’re trying to be understood.";
-  if (lower.includes("miss")) coreIntent = "You’re saying you miss connection.";
-  if (lower.includes("tired")) coreIntent = "You sound emotionally exhausted.";
-
-  // ---- Personality-based dynamic rewrites ----
-  let rewrite = "";
-
-  if (soundsLike.includes("passive-aggressive")) {
-    rewrite = personality === "blunt" ?
-      "Stop beating around the bush—say what you mean." :
-      "I feel a bit annoyed, can we clear this up?";
-  } else if (soundsLike.includes("over-apologizing")) {
-    rewrite = personality === "soft" ?
-      "I hope this doesn’t come off wrong, but…" :
-      "I might be overthinking, but I wanted to say this:";
-  } else if (soundsLike.includes("accusatory")) {
-    rewrite = personality === "rough" ?
-      "Yo, don’t sugarcoat—say what you mean." :
-      "I feel hurt, can we talk?";
-  } else if (soundsLike.includes("affectionate")) {
-    rewrite = "Just wanted you to know I care about you 💖";
-  } else if (soundsLike.includes("frustrated")) {
-    rewrite = "This is getting annoying… let's figure it out.";
-  } else if (soundsLike.includes("casual")) {
-    rewrite = "Hey! Just checking in 🙂";
-  } else if (soundsLike.includes("uncertain")) {
-    rewrite = "I’m not sure how to say this, but…";
-  } else {
-    // Fallback default if no keyword detected
-    rewrite = personality === "rough" ?
-      "Yo, gotta be real—something feels off." :
-      "I’ve been feeling some distance and I want to understand what’s going on.";
-  }
-
-  // ---- Add urban/Gen Z random emoji flair ----
-  const endings = ["😅", "🤔", "💀", "🔥", "🙃", "😳"];
-  rewrite += " " + endings[Math.floor(Math.random() * endings.length)];
-
-  // ---- Display results ----
-  resultDiv.innerHTML = `
-    <p><strong>How it sounds:</strong> ${soundsLike.length > 0 ? soundsLike.join(", ") : "Pretty neutral."}</p>
-    <p><strong>What they might feel:</strong> ${soundsLike.includes("accusatory") ? "Defensive" : "Open but unsure"}</p>
-    <p><strong>What you mean:</strong> ${coreIntent}</p>
-    ${warning ? `<p class='warning'>${warning}</p>` : ""}
-    <p><strong>Rewrite (your vibe):</strong> ${rewrite}</p>
-  `;
+function copyResult() {
+  const resultDiv = document.getElementById("result");
+  const textToCopy = resultDiv.dataset.latest;
+  if (!textToCopy) return;
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    alert("Copied to clipboard!");
+  });
 }
