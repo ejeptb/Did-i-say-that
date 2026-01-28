@@ -19,6 +19,10 @@ function analyze() {
     soundsLike.push("over-apologizing");
     warning = "🚩 You might be shrinking yourself here.";
   }
+  if (lower.includes("love you") || lower.includes("luv u")) soundsLike.push("affectionate");
+if (lower.includes("ugh") || lower.includes("smh")) soundsLike.push("frustrated");
+if (lower.includes("hey") && text.length < 20) soundsLike.push("casual");
+if (lower.includes("idk") || lower.includes("not sure")) soundsLike.push("uncertain");
   if (lower.includes("you never") || lower.includes("you always")) {
     soundsLike.push("accusatory");
     warning = "⚠️ This could put them on defense.";
@@ -30,19 +34,31 @@ function analyze() {
 
   // Personality-based rewrites
   let rewrite = "";
-  switch (personality) {
-    case "soft":
-      rewrite = "I don’t want this to come off wrong, but I’ve been feeling a little disconnected lately.";
-      break;
-    case "rough":
-      rewrite = "I’m not asking for a lot. I just need to feel like I matter to you.";
-      break;
-    case "blunt":
-      rewrite = "Something feels off between us and we need to talk about it.";
-      break;
-    default:
-      rewrite = "I’ve been feeling some distance and I want to understand what’s going on.";
-  }
+
+if (soundsLike.includes("passive-aggressive")) {
+  rewrite = personality === "blunt" ? 
+    "Stop beating around the bush—say what you mean." :
+    "I feel a bit annoyed, can we clear this up?";
+} else if (soundsLike.includes("over-apologizing")) {
+  rewrite = personality === "soft" ?
+    "I hope this doesn’t come off wrong, but…" :
+    "I might be overthinking, but I wanted to say this:";
+} else if (soundsLike.includes("accusatory")) {
+  rewrite = personality === "rough" ?
+    "You need to hear me, something’s off." :
+    "I feel hurt, can we talk?";
+} else if (soundsLike.includes("affectionate")) {
+  rewrite = "Just wanted you to know I care about you 💖";
+} else if (soundsLike.includes("frustrated")) {
+  rewrite = "This is getting annoying… let's figure it out.";
+} else if (soundsLike.includes("casual")) {
+  rewrite = "Hey! Just checking in 🙂";
+} else if (soundsLike.includes("uncertain")) {
+  rewrite = "I’m not sure how to say this, but…";
+} else {
+  // fallback default
+  rewrite = "I’ve been feeling some distance and I want to understand what’s going on.";
+}
 
   resultDiv.innerHTML = `
     <p><strong>How it sounds:</strong> ${soundsLike.length > 0 ? soundsLike.join(", ") : "Pretty neutral."}</p>
@@ -53,3 +69,5 @@ function analyze() {
   `;
 }
 if(personality === "rough") rewrite = "Yo, don’t sugarcoat—say what you mean.";
+const endings = ["😅", "🤔", "💀", "🔥"];
+rewrite += " " + endings[Math.floor(Math.random()*endings.length)];
