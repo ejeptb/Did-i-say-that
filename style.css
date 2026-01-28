@@ -28,7 +28,7 @@ select, button {
 }
 
 button {
-  background: #f1f1f1;
+  background: linear-gradient(90deg, #ff6b6b, #f1f1f1);
   color: #0f0f0f;
   font-weight: bold;
   cursor: pointer;
@@ -41,10 +41,4 @@ button {
 .warning {
   color: #ff6b6b;
   font-weight: bold;
-}
-button {
-  background: linear-gradient(90deg, #ff6b6b, #f1f1f1);
-  color: #0f0f0f;
-  font-weight: bold;
-  cursor: pointer;
 }
